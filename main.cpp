@@ -3,13 +3,13 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
+using namespace std;
 struct Registro {
-    std::string mes;
+    string mes;
     int dia;
-    std::string hora;
-    std::string ip;
-    std::string razon;
+    string hora;
+    string ip;
+    string razon;
     Registro *siguiente;
     Registro *anterior;
 };
@@ -21,7 +21,7 @@ private:
 public:
     Lista() : cabeza(nullptr), cola(nullptr) {}
 
-    void agregarRegistro(const std::string &mes, int dia, const std::string &hora, const std::string &ip, const std::string &razon) {
+    void agregarRegistro(const string &mes, int dia, const string &hora, const string &ip, const string &razon) {
         Registro *nuevo = new Registro{mes, dia, hora, ip, razon, nullptr, nullptr};
         if (!cabeza) {
             cabeza = cola = nuevo;
@@ -42,7 +42,7 @@ public:
         cola = temp;
     }
 
-    Registro* buscarPorRangoIP(const std::string &ipInicio, const std::string &ipFin) {
+    Registro* buscarPorRangoIP(const string &ipInicio, const string &ipFin) {
         Registro *temp = cabeza;
         while (temp && temp->ip < ipInicio) {
             temp = temp->siguiente;
@@ -50,10 +50,10 @@ public:
         return temp;
     }
 
-    void imprimirPorRangoIP(const std::string &ipInicio, const std::string &ipFin) {
+    void imprimirPorRangoIP(const string &ipInicio, const string &ipFin) {
         Registro *temp = buscarPorRangoIP(ipInicio, ipFin);
         while (temp && temp->ip <= ipFin) {
-            std::cout << temp->mes << " " << temp->dia << " " << temp->hora << " " << temp->ip << " " << temp->razon << std::endl;
+            cout << temp->mes << " " << temp->dia << " " << temp->hora << " " << temp->ip << " " << temp->razon << endl;
             temp = temp->siguiente;
         }
     }
@@ -96,32 +96,32 @@ private:
 };
 
 int main() {
-    std::ifstream archivo("C:\\Users\\adolf\\Desktop\\UNI\\Semestre 3\\Programacion de esreucturas de datos y algoritos\\Act_2.3\\bitacora-1.txt");
-    std::string linea, mes, hora, ip, razon;
+    ifstream archivo("C:\\Users\\adolf\\Desktop\\UNI\\Semestre 3\\Programacion de esreucturas de datos y algoritos\\Act_2.3\\bitacora-1.txt");
+    string linea, mes, hora, ip, razon;
     int dia;
 
     Lista bitacora;
 
     if (archivo.is_open()) {
         while (getline(archivo, linea)) {
-            std::istringstream iss(linea);
+            istringstream iss(linea);
             iss >> mes >> dia >> hora >> ip;
             getline(iss, razon);
             bitacora.agregarRegistro(mes, dia, hora, ip, razon);
         }
         archivo.close();
     } else {
-        std::cerr << "No se pudo abrir el archivo" << std::endl;
+        cerr << "No se pudo abrir el archivo" << endl;
         return 1;
     }
 
     bitacora.ordenarPorIP();
 
-    std::string ipInicio, ipFin;
-    std::cout << "Ingrese la IP de inicio de busqueda: ";
-    std::cin >> ipInicio;
-    std::cout << "Ingrese la IP de fin de busqueda: ";
-    std::cin >> ipFin;
+    string ipInicio, ipFin;
+    cout << "Ingrese la IP de inicio de busqueda: ";
+    cin >> ipInicio;
+    cout << "Ingrese la IP de fin de busqueda: ";
+    cin >> ipFin;
 
     bitacora.imprimirPorRangoIP(ipInicio, ipFin);
 
