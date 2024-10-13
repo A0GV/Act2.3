@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+
 using namespace std;
 
 // Function to split a string by a delimiter
@@ -33,60 +34,112 @@ unsigned long ipToLong(const string &ip) {
     return ipNum;
 }
 
-// Merge function to merge two halves
-void merge(vector<string>& logs, int left, int mid, int right) {
-    int n1 = mid - left + 1;
-    int n2 = right - mid;
+// Structure to represent a log entry in the linked list
+struct Log {
+    string entry;
+    Log* next;
 
-    vector<string> leftLogs(n1);
-    vector<string> rightLogs(n2);
+    Log(const string& e) : entry(e), next(nullptr) {}
+};
 
-    for (int i = 0; i < n1; i++)
-        leftLogs[i] = logs[left + i];
-    for (int i = 0; i < n2; i++)
-        rightLogs[i] = logs[mid + 1 + i];
+// Class to represent a linked list of log entries
+class LinkedList {
+public:
+    LinkedList() : head(nullptr) {}
 
-    int i = 0, j = 0, k = left;
-    while (i < n1 && j < n2) {
-        if (ipToLong(extractIP(leftLogs[i])) <= ipToLong(extractIP(rightLogs[j]))) {
-            logs[k] = leftLogs[i];
-            i++;
+    void append(const string& entry) {
+        Log* newLog = new Log(entry);
+        if (!head) {
+            head = newLog;
         } else {
-            logs[k] = rightLogs[j];
-            j++;
+            Log* temp = head;
+            while (temp->next) {
+                temp = temp->next;
+            }
+            temp->next = newLog;
         }
-        k++;
     }
 
-    while (i < n1) {
-        logs[k] = leftLogs[i];
-        i++;
-        k++;
+    void printList() const {
+        Log* temp = head;
+        while (temp) {
+            cout << temp->entry << endl;
+            temp = temp->next;
+        }
     }
 
-    while (j < n2) {
-        logs[k] = rightLogs[j];
-        j++;
-        k++;
+    void sort() {
+        head = mergeSort(head);
     }
-}
 
-// Merge sort function
-void mergeSort(vector<string>& logs, int left, int right) {
-    if (left < right) {
-        int mid = left + (right - left) / 2;
-
-        mergeSort(logs, left, mid);
-        mergeSort(logs, mid + 1, right);
-
-        merge(logs, left, mid, right);
+    ~LinkedList() {
+        Log* temp;
+        while (head) {
+            temp = head;
+            head = head->next;
+            delete temp;
+        }
     }
-}
+
+private:
+    Log* head;
+
+public:
+    Log* getHead() const {
+        return head;
+    }
+
+    Log* mergeSort(Log* head) {
+        if (!head || !head->next) {
+            return head;
+        }
+
+        Log* middle = getMiddle(head);
+        Log* nextOfMiddle = middle->next;
+        middle->next = nullptr;
+
+        Log* left = mergeSort(head);
+        Log* right = mergeSort(nextOfMiddle);
+
+        return merge(left, right);
+    }
+
+    Log* getMiddle(Log* head) {
+        if (!head) return head;
+
+        Log* slow = head;
+        Log* fast = head->next;
+
+        while (fast && fast->next) {
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+
+        return slow;
+    }
+
+    Log* merge(Log* left, Log* right) {
+        if (!left) return right;
+        if (!right) return left;
+
+        Log* result = nullptr;
+
+        if (ipToLong(extractIP(left->entry)) <= ipToLong(extractIP(right->entry))) {
+            result = left;
+            result->next = merge(left->next, right);
+        } else {
+            result = right;
+            result->next = merge(left, right->next);
+        }
+
+        return result;
+    }
+};
 
 int main() {
     ifstream inputFile("bitacora.txt");
     string line;
-    vector<string> logs;
+    LinkedList logs;
     
     string beginningInput;
     string lastInput;
@@ -99,20 +152,20 @@ int main() {
     while (getline(inputFile, line)) {
         unsigned long ipNum = ipToLong(extractIP(line));
         if (ipNum >= ipToLong(beginningInput) && ipNum <= ipToLong(lastInput)) {
-            logs.push_back(line);
+            logs.append(line);
         }
     }
 
-    inputFile.close();
-
-    mergeSort(logs, 0, logs.size() - 1);
+    logs.sort();
 
     ofstream outputFile("bitacoraPorIP.txt");
-    for (const string &log : logs) {
-        string ip = extractIP(log);
+    Log* temp = logs.getHead();
+    while (temp) {
+        string ip = extractIP(temp->entry);
         if (ip >= beginningInput && ip <= lastInput) {
-            outputFile << log << endl;
+            outputFile << temp->entry << endl;
         }
+        temp = temp->next;
     }
 
     outputFile.close();
