@@ -3,119 +3,119 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <algorithm>
+
 using namespace std;
 
-// Function to split a string by a delimiter
-vector<string> split(const string &str, char delimiter) {
-    vector<string> tokens;
-    string token;
-    istringstream tokenStream(str);
-    while (getline(tokenStream, token, delimiter)) {
-        tokens.push_back(token);
-    }
-    return tokens;
-}
+struct Registro {
+    string mes;
+    int dia;
+    string hora;
+    string ip;
+    string razon;
+    Registro *siguiente;
+};
 
-// Function to extract the IP address from a log entry
-string extractIP(const string &logEntry) {
-    vector<string> parts = split(logEntry, ' ');
-    return parts[3];
-}
+class Lista {
+private:
+    Registro *cabeza;
+public:
+    Lista() : cabeza(nullptr) {}
 
-// Function to convert an IP address to a numerical value for comparison
-unsigned long ipToLong(const string &ip) {
-    vector<string> parts = split(ip, '.');
-    unsigned long ipNum = 0;
-    for (const string &part : parts) {
-        ipNum = ipNum * 256 + stoi(part);
-    }
-    return ipNum;
-}
-
-// Merge function to merge two halves
-void merge(vector<string>& logs, int left, int mid, int right) {
-    int n1 = mid - left + 1;
-    int n2 = right - mid;
-
-    vector<string> leftLogs(n1);
-    vector<string> rightLogs(n2);
-
-    for (int i = 0; i < n1; i++)
-        leftLogs[i] = logs[left + i];
-    for (int i = 0; i < n2; i++)
-        rightLogs[i] = logs[mid + 1 + i];
-
-    int i = 0, j = 0, k = left;
-    while (i < n1 && j < n2) {
-        if (ipToLong(extractIP(leftLogs[i])) <= ipToLong(extractIP(rightLogs[j]))) {
-            logs[k] = leftLogs[i];
-            i++;
+    void agregarRegistro(const string &mes, int dia, const string &hora, const string &ip, const string &razon) {
+        Registro *nuevo = new Registro{mes, dia, hora, ip, razon, nullptr};
+        if (!cabeza) {
+            cabeza = nuevo;
         } else {
-            logs[k] = rightLogs[j];
-            j++;
+            Registro *temp = cabeza;
+            while (temp->siguiente) {
+                temp = temp->siguiente;
+            }
+            temp->siguiente = nuevo;
         }
-        k++;
     }
 
-    while (i < n1) {
-        logs[k] = leftLogs[i];
-        i++;
-        k++;
+    void ordenarPorIP() {
+        if (!cabeza || !cabeza->siguiente) return;
+        cabeza = mergeSort(cabeza);
     }
 
-    while (j < n2) {
-        logs[k] = rightLogs[j];
-        j++;
-        k++;
+    Registro* buscarPorRangoIP(const string &ipInicio, const string &ipFin) {
+        Registro *temp = cabeza;
+        while (temp && temp->ip < ipInicio) {
+            temp = temp->siguiente;
+        }
+        return temp;
     }
-}
 
-// Merge sort function
-void mergeSort(vector<string>& logs, int left, int right) {
-    if (left < right) {
-        int mid = left + (right - left) / 2;
-
-        mergeSort(logs, left, mid);
-        mergeSort(logs, mid + 1, right);
-
-        merge(logs, left, mid, right);
+    void imprimirPorRangoIP(const string &ipInicio, const string &ipFin) {
+        Registro *temp = buscarPorRangoIP(ipInicio, ipFin);
+        while (temp && temp->ip <= ipFin) {
+            cout << temp->mes << " " << temp->dia << " " << temp->hora << " " << temp->ip << " " << temp->razon << endl;
+            temp = temp->siguiente;
+        }
     }
-}
+
+private:
+    Registro* mergeSort(Registro* head) {
+        if (!head || !head->siguiente) return head;
+        Registro *middle = getMiddle(head);
+        Registro *half = middle->siguiente;
+        middle->siguiente = nullptr;
+        return merge(mergeSort(head), mergeSort(half));
+    }
+
+    Registro* getMiddle(Registro* head) {
+        if (!head) return head;
+        Registro *slow = head, *fast = head->siguiente;
+        while (fast && fast->siguiente) {
+            slow = slow->siguiente;
+            fast = fast->siguiente->siguiente;
+        }
+        return slow;
+    }
+
+    Registro* merge(Registro* left, Registro* right) {
+        if (!left) return right;
+        if (!right) return left;
+        if (left->ip <= right->ip) {
+            left->siguiente = merge(left->siguiente, right);
+            return left;
+        } else {
+            right->siguiente = merge(left, right->siguiente);
+            return right;
+        }
+    }
+};
 
 int main() {
-    ifstream inputFile("bitacora.txt");
-    string line;
-    vector<string> logs;
-    
-    string beginningInput;
-    string lastInput;
+    ifstream archivo("C:\\Users\\adolf\\Desktop\\UNI\\Semestre 3\\Programacion de esreucturas de datos y algoritos\\Act_2.3\\bitacora-1.txt");
+    string linea, mes, hora, ip, razon;
+    int dia;
 
-    cout << "Rango Inicial de IPs: ";
-    cin >> beginningInput;
-    cout << "Rango Final de IPs: ";
-    cin >> lastInput;
+    Lista bitacora;
 
-    while (getline(inputFile, line)) {
-        unsigned long ipNum = ipToLong(extractIP(line));
-        if (ipNum >= ipToLong(beginningInput) && ipNum <= ipToLong(lastInput)) {
-            logs.push_back(line);
+    if (archivo.is_open()) {
+        while (getline(archivo, linea)) {
+            istringstream iss(linea);
+            iss >> mes >> dia >> hora >> ip;
+            getline(iss, razon);
+            bitacora.agregarRegistro(mes, dia, hora, ip, razon);
         }
+        archivo.close();
+    } else {
+        cerr << "No se pudo abrir el archivo" << endl;
+        return 1;
     }
 
-    inputFile.close();
+    bitacora.ordenarPorIP();
 
-    mergeSort(logs, 0, logs.size() - 1);
+    string ipInicio, ipFin;
+    cout << "Ingrese la IP de inicio de busqueda: ";
+    cin >> ipInicio;
+    cout << "Ingrese la IP de fin de busqueda: ";
+    cin >> ipFin;
 
-    ofstream outputFile("bitacoraPorIP.txt");
-    for (const string &log : logs) {
-        string ip = extractIP(log);
-        if (ip >= beginningInput && ip <= lastInput) {
-            outputFile << log << endl;
-        }
-    }
-
-    outputFile.close();
+    bitacora.imprimirPorRangoIP(ipInicio, ipFin);
 
     return 0;
 }
