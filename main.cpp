@@ -1,3 +1,9 @@
+
+/*
+ * Adolfo García Vázquez- A01741767
+ * Edgar Salazar Rios A01286059
+ * Eduardo Patricio Vega Villarreal A01198876
+ */
 #include <iostream>
 #include <fstream>
 #include <sstream>
