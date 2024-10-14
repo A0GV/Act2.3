@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 using namespace std;
+
+// Estructura para almacenar los detalles de una entrada de registro
 struct Registro {
     string mes;
     int dia;
@@ -18,9 +20,12 @@ class Lista {
 private:
     Registro *cabeza;
     Registro *cola;
+
 public:
     Lista() : cabeza(nullptr), cola(nullptr) {}
 
+    // Función para agregar una nueva entrada de registro a la lista
+    // Complejidad: O(1)
     void agregarRegistro(const string &mes, int dia, const string &hora, const string &ip, const string &razon) {
         Registro *nuevo = new Registro{mes, dia, hora, ip, razon, nullptr, nullptr};
         if (!cabeza) {
@@ -32,6 +37,8 @@ public:
         }
     }
 
+    // Función para ordenar la lista por direcciones IP usando merge sort
+    // Complejidad: O(n log n)
     void ordenarPorIP() {
         if (!cabeza || !cabeza->siguiente) return;
         cabeza = mergeSort(cabeza);
@@ -42,6 +49,8 @@ public:
         cola = temp;
     }
 
+    // Función para encontrar la primera entrada de registro dentro del rango de IP
+    // Complejidad: O(n)
     Registro* buscarPorRangoIP(const string &ipInicio, const string &ipFin) {
         Registro *temp = cabeza;
         while (temp && temp->ip < ipInicio) {
@@ -50,6 +59,8 @@ public:
         return temp;
     }
 
+    // Función para imprimir las entradas de registro dentro del rango de IP
+    // Complejidad: O(m)
     void imprimirPorRangoIP(const string &ipInicio, const string &ipFin) {
         Registro *temp = buscarPorRangoIP(ipInicio, ipFin);
         while (temp && temp->ip <= ipFin) {
@@ -59,6 +70,8 @@ public:
     }
 
 private:
+    // Función de merge sort para ordenar la lista
+    // Complejidad: O(n log n)
     Registro* mergeSort(Registro* head) {
         if (!head || !head->siguiente) return head;
         Registro *middle = getMiddle(head);
@@ -68,6 +81,8 @@ private:
         return merge(mergeSort(head), mergeSort(half));
     }
 
+    // Función para encontrar el medio de la lista
+    // Complejidad: O(n)
     Registro* getMiddle(Registro* head) {
         if (!head) return head;
         Registro *slow = head, *fast = head->siguiente;
@@ -78,6 +93,8 @@ private:
         return slow;
     }
 
+    // Función de merge para fusionar dos mitades ordenadas
+    // Complejidad: O(n)
     Registro* merge(Registro* left, Registro* right) {
         if (!left) return right;
         if (!right) return left;
